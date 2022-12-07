@@ -37,13 +37,15 @@ app.election_lock = Lock()
 app.inactive = False
 app.inactive_lock = Lock()
 
+def get_thread(url, timeout, return_dict, alias):
+    return_dict[alias] = requests.get(url, timeout=timeout)
+
 def start_new_election(timeout):
     requests_threads = {}
     requests_threads_returns = {alias:None for alias in higher.keys()}
     for alias, idx in higher:
         url = f'http://{alias}/start_election/{HOSTNAME}'
-        get = lambda: requests_threads_returns[alias] = requests.get(url, timeout=timeout)
-        requests_threads[alias] = threading.Thread(target=get)
+        requests_threads[alias] = threading.Thread(target=get_thread, args=(url, timeout, requests_threads_returns, alias))
     [t.start() for t in requests_threads.values()]
 
     [t.join() for t in requests_threads.values()]
@@ -55,7 +57,7 @@ def broadcast_new_leader(timeout):
     requests_threads_returns = {alias:None for alias in higher.keys()}
     for alias, idx in lower:
         url = f'http://{alias}/new_leader/{HOSTNAME}'
-        get = lambda: requests_threads_returns[alias] = requests.get(url, timeout=timeout)
+        requests_threads[alias] = threading.Thread(target=get_thread, args=(url, timeout, requests_threads_returns, alias))
         requests_threads[alias] = threading.Thread(target=get)
     [t.start() for t in requests_threads.values()]
 
@@ -71,7 +73,7 @@ def election(timeout):
         app.election_lock.release()
     else:
         # Election already started
-        continue
+        return
 
     if not any(response):
         # I'm the leader
