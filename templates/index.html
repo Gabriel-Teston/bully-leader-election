@@ -1,5 +1,18 @@
 <!doctype html>
 <html>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+        var socket = io();
+        socket.on('connect', function() {
+            socket.emit('event', {data: ''});
+        });
+
+        socket.onAny((m, m1) => {
+            console.log(m, m1);
+            let leader = document.getElementById('leader');
+            leader.innerText = "Leader: "+ m1.leader;
+        });
+    </script>
     <script>
         function httpGet(url, callback){
             xmlhttp=new XMLHttpRequest();
@@ -12,6 +25,9 @@
     </script>
     <body>
         <h1>Hello if you see this than you have apache running on {{ hostname|tojson }}!</h1>
+        <h2 id="leader">Leader: None</h2>
+
+        <a href="{{ halt_url }}">Pause/Unpause</a>
 
         {% for key, value in higher.items() %}
             <h1>Key: {{key}}</h1>

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, url_for, Request
 from flask_cors import CORS, cross_origin
+from flask_socketio import SocketIO, send
 import requests
 import os
 
@@ -29,6 +30,8 @@ lower = {
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
 
 app.leader = None
 app.leader_lock = Lock()
@@ -77,6 +80,8 @@ def election(timeout):
 
     if not any(response):
         # I'm the leader
+        print(f"I'm the leader ({HOSTNAME})")
+        app.leader = HOSTNAME
         broadcast_new_leader(timeout)
     else:
         # I'm DONE
@@ -84,9 +89,11 @@ def election(timeout):
 
 def bully(timeout):
     while True:
-        time.sleep(random.randint(5, 60))
+        r = random.randint(5, 60)
+        print(f"I'll wait {r}s")
+        time.sleep(r)
         with app.leader_lock:
-            url = f'http://{leader}/health_check'
+            url = f'http://{app.leader}/health_check'
             try:
                 # Leader is dead
                 requests.get(url, timeout=timeout)
@@ -101,7 +108,8 @@ def index():
         'index.html', 
         hostname=HOSTNAME,
         higher=higher,
-        lower=lower
+        lower=lower,
+        halt_url=url_for('halt')
         )
 
 @app.route("/halt")
@@ -110,6 +118,7 @@ def halt():
         if app.inactive:
             threading.Thread(target=election, args=(timeout,)).start()
         app.inactive = [True, False][app.inactive]
+    return str(app.inactive)
 
 @app.route("/health_check")
 def health_check():
@@ -119,6 +128,7 @@ def health_check():
 def new_leader(leader):
     with app.leader_lock:
         app.leader = leader
+    return app.leader
 
 @app.route("/start_election/<caller>")
 def start_election(caller):
@@ -129,4 +139,9 @@ def start_election(caller):
         else:
             Request.close()
 
-    
+@socketio.on('event')
+def handle_message(event):
+    print(event)
+    while True:
+        send({"leader": app.leader})
+        time.sleep(5)
