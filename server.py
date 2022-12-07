@@ -37,9 +37,10 @@ app.leader = None
 app.leader_lock = Lock()
 app.election = False
 app.election_lock = Lock()
-app.inactive = False
+app.inactive = True
 app.inactive_lock = Lock()
 app.connected = False
+app.time_until_retry = 0
 
 def get_thread(url, timeout, return_dict, alias):
     return_dict[alias] = requests.get(url, timeout=timeout)
@@ -90,18 +91,26 @@ def election(timeout):
 
 def bully(timeout):
     while True:
-        r = random.randint(5, 60)
-        print(f"I'll wait {r}s")
-        time.sleep(r)
-        with app.leader_lock:
-            url = f'http://{app.leader}/health_check'
-            try:
-                # Leader is dead
-                requests.get(url, timeout=timeout)
-            except:
-                threading.Thread(target=election, args=(timeout,)).start()
+        if not app.inactive:
+            app.time_until_retry = random.randint(5, 60)
+            print(f"I'll wait {app.time_until_retry}s")
 
-threading.Thread(target=bully, args=(TIMEOUT,)).start()
+            while app.time_until_retry > 0:
+                time.sleep(1)
+                app.time_until_retry -= 1
+            with app.leader_lock:
+                url = f'http://{app.leader}/health_check'
+                try:
+                    if app.leader == None:
+                        raise
+                    requests.get(url, timeout=timeout)
+                except:
+                    # Leader is dead
+                    print("Leader is dead")
+                    threading.Thread(target=election, args=(timeout,)).start()
+
+app.bully_thread = threading.Thread(target=bully, args=(TIMEOUT,))
+app.bully_thread.start()
 
 @app.route("/")
 def index():
@@ -148,10 +157,17 @@ def start_election(caller):
 def handle_message(event):
     print(event)
     while True:
-        emit("leader", {"leader": app.leader})
+        emit("leader", {"leader": app.leader, "time_until_retry": app.time_until_retry})
         time.sleep(5)
 
 @socketio.on('connect')
 def on_connect(event):
-    app.connected = True
+    with app.inactive_lock:
+        app.inactive = False
     print(event)
+
+@socketio.on('disconnect')
+def disconnect_details():
+    with app.inactive_lock:
+        app.inactive = True
+    print("Disconnected")

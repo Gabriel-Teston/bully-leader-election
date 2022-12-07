@@ -4,7 +4,7 @@
     <script type="text/javascript" charset="utf-8">
         var socket = io();
         socket.on('connect', function() {
-            socket.emit('event', {data: ''});
+            socket.emit('event', {data: 'connect'});
         });
 
         socket.onAny((m, m1) => {
@@ -15,6 +15,10 @@
             let leader = document.getElementById('leader');
             leader.innerText = "Leader: "+ m['leader'];
         });
+
+        window.onbeforeunload = function () {
+            socket.emit('client_disconnecting', {data: 'disconnect'});
+        }
     </script>
     <script>
         function httpGet(url, callback){
