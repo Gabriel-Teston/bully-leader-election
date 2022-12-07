@@ -146,12 +146,14 @@ def health_check():
 
 @app.route("/new_leader/<leader>")
 def new_leader(leader):
+    print(f"/new_leader/{leader}")
     with app.leader_lock:
         app.leader = leader
     return app.leader
 
 @app.route("/start_election/<caller>")
 def start_election(caller):
+    print(f"/start_election/{caller}")
     with app.inactive_lock:
         if not app.inactive:
             threading.Thread(target=election, args=(timeout,)).start()
