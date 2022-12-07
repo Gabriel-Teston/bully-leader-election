@@ -10,9 +10,12 @@ git clone https://github.com/Gabriel-Teston/bully-leader-election.git /opt/app
 python3 -m venv /opt/app/env
 pip3 install -r /opt/app/requirements.txt
 
-export INSTACES=$(sudo curl "http://metadata.google.internal/computeMetadata/v1/project/attributes/" -H "Metadata-Flavor: Google")
+export INSTANCES=$(sudo curl "http://metadata.google.internal/computeMetadata/v1/project/attributes/" -H "Metadata-Flavor: Google")
+sudo curl "http://metadata.google.internal/computeMetadata/v1/project/attributes/" -H "Metadata-Flavor: Google" | sudo tee /opt/app/instances
 
 # Start application
 cd /opt/app/
 flask --app=server run --host=0.0.0.0 --port=80
 echo "" > sudo tee /DONE
+
+#sudo google_metadata_script_runner startup

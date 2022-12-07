@@ -9,7 +9,7 @@ import time
 HOSTNAME = socket.gethostname()
 
 instances = {
-    alias: idx for idx, alias in enumerate(os.getenv('INSTANCES'))
+    alias: idx for idx, alias in enumerate(os.getenv('INSTANCES').split())
 }
 
 higher = {
