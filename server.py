@@ -48,7 +48,7 @@ def get_thread(url, timeout, return_dict, alias):
 def start_new_election(timeout):
     requests_threads = {}
     requests_threads_returns = {alias:None for alias in higher.keys()}
-    for alias, idx in higher:
+    for alias, idx in higher.items():
         url = f'http://{alias}/start_election/{HOSTNAME}'
         requests_threads[alias] = threading.Thread(target=get_thread, args=(url, timeout, requests_threads_returns, alias))
     [t.start() for t in requests_threads.values()]
@@ -60,7 +60,7 @@ def start_new_election(timeout):
 def broadcast_new_leader(timeout):
     requests_threads = {}
     requests_threads_returns = {alias:None for alias in higher.keys()}
-    for alias, idx in lower:
+    for alias, idx in lower.items():
         url = f'http://{alias}/new_leader/{HOSTNAME}'
         requests_threads[alias] = threading.Thread(target=get_thread, args=(url, timeout, requests_threads_returns, alias))
         requests_threads[alias] = threading.Thread(target=get)
