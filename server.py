@@ -156,7 +156,7 @@ def start_election(caller):
     print(f"/start_election/{caller}")
     with app.inactive_lock:
         if not app.inactive:
-            threading.Thread(target=election, args=(timeout,)).start()
+            threading.Thread(target=election, args=(TIMEOUT,)).start()
             return "OK"
         else:
             Request.close()
