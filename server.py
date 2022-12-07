@@ -9,6 +9,9 @@ import time
 import threading
 from multiprocessing import Lock
 import random
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 TIMEOUT = 20
 HOSTNAME = socket.gethostname()
@@ -46,6 +49,7 @@ def get_thread(url, timeout, return_dict, alias):
     return_dict[alias] = requests.get(url, timeout=timeout)
 
 def start_new_election(timeout):
+    print("Start new election")
     requests_threads = {}
     requests_threads_returns = {alias:None for alias in higher.keys()}
     for alias, idx in higher.items():
@@ -58,6 +62,7 @@ def start_new_election(timeout):
     return requests_threads_returns
 
 def broadcast_new_leader(timeout):
+    print("Broadcast new leader")
     requests_threads = {}
     requests_threads_returns = {alias:None for alias in higher.keys()}
     for alias, idx in lower.items():
@@ -71,6 +76,7 @@ def broadcast_new_leader(timeout):
     return requests_threads_returns
 
 def election(timeout):
+    print("Election")
     if app.election_lock.acquire():
         # Start election
         response = start_new_election(timeout)
