@@ -9,8 +9,11 @@
 
         socket.onAny((m, m1) => {
             console.log(m, m1);
+        });
+
+        socket.on("leader", (m, m1) => {
             let leader = document.getElementById('leader');
-            leader.innerText = "Leader: "+ m1.leader;
+            leader.innerText = "Leader: "+ m['leader'];
         });
     </script>
     <script>

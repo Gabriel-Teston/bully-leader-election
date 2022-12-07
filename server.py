@@ -1,6 +1,6 @@
 from flask import Flask, render_template, url_for, Request
 from flask_cors import CORS, cross_origin
-from flask_socketio import SocketIO, send
+from flask_socketio import SocketIO, send, emit
 import requests
 import os
 
@@ -10,7 +10,7 @@ import threading
 from multiprocessing import Lock
 import random
 
-TIMEOUT = 50
+TIMEOUT = 20
 HOSTNAME = socket.gethostname()
 
 instances = {
@@ -39,6 +39,7 @@ app.election = False
 app.election_lock = Lock()
 app.inactive = False
 app.inactive_lock = Lock()
+app.connected = False
 
 def get_thread(url, timeout, return_dict, alias):
     return_dict[alias] = requests.get(url, timeout=timeout)
@@ -122,7 +123,11 @@ def halt():
 
 @app.route("/health_check")
 def health_check():
-    return "OK"
+    with app.inactive_lock:
+        if not app.inactive:
+            return "OK"
+        else:
+            Request.close()
 
 @app.route("/new_leader/<leader>")
 def new_leader(leader):
@@ -143,5 +148,10 @@ def start_election(caller):
 def handle_message(event):
     print(event)
     while True:
-        send({"leader": app.leader})
+        emit("leader", {"leader": app.leader})
         time.sleep(5)
+
+@socketio.on('connect')
+def on_connect(event):
+    app.connected = True
+    print(event)
