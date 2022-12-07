@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+    <script>
+        function httpGet(url, callback){
+            xmlhttp=new XMLHttpRequest();
+            xmlhttp.onreadystatechange=()=>{
+                callback(xmlhttp);
+            }
+            xmlhttp.open("GET", url, false );
+            xmlhttp.send();
+        }
+    </script>
+    <body>
+        <h1>Hello if you see this than you have apache running on {{ hostname|tojson }}!</h1>
+
+        {% for key, value in higher.items() %}
+            <h1>Key: {{key}}</h1>
+            <h2>Value: {{value}}</h2>
+        {% endfor %}
+
+        {% for key, value in lower.items() %}
+            <h1>Key: {{key}}</h1>
+            <h2>Value: {{value}}</h2>
+        {% endfor %}
+    </body>
+</html>
