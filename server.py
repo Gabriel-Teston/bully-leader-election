@@ -68,7 +68,6 @@ def broadcast_new_leader(timeout):
     for alias, idx in lower.items():
         url = f'http://{alias}/new_leader/{HOSTNAME}'
         requests_threads[alias] = threading.Thread(target=get_thread, args=(url, timeout, requests_threads_returns, alias))
-        requests_threads[alias] = threading.Thread(target=get)
     [t.start() for t in requests_threads.values()]
 
     [t.join() for t in requests_threads.values()]
