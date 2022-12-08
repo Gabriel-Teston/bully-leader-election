@@ -46,8 +46,11 @@ app.connected = False
 app.time_until_retry = 0
 
 def get_thread(url, timeout, return_dict, alias):
-    response = requests.get(url, timeout=timeout)
-    if response.status_code == 400:
+    try:
+        response = requests.get(url, timeout=timeout)
+        if response.status_code == 400:
+            raise
+    except:
         return
     return_dict[alias] = True
 
@@ -162,8 +165,7 @@ def start_election(caller):
         if not app.inactive:
             threading.Thread(target=election, args=(TIMEOUT,)).start()
             return "OK"
-        else:
-            return "", 400
+    return "", 400
 
 @socketio.on('event')
 def handle_message(event):
