@@ -46,7 +46,7 @@ app.connected = False
 app.time_until_retry = 0
 
 def get_thread(url, timeout, return_dict, alias):
-    response requests.get(url, timeout=timeout)
+    response = requests.get(url, timeout=timeout)
     if response.status_code == 400:
         return
     return_dict[alias] = True
