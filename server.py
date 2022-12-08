@@ -11,7 +11,7 @@ from multiprocessing import Lock
 import random
 import logging
 log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+#log.setLevel(logging.ERROR)
 
 TIMEOUT = 20
 HOSTNAME = socket.gethostname()
