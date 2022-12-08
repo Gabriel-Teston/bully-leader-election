@@ -46,7 +46,10 @@ app.connected = False
 app.time_until_retry = 0
 
 def get_thread(url, timeout, return_dict, alias):
-    return_dict[alias] = requests.get(url, timeout=timeout)
+    response requests.get(url, timeout=timeout)
+    if response.status_code == 400:
+        return
+    return_dict[alias] = True
 
 def start_new_election(timeout):
     print("Start new election")
@@ -108,7 +111,9 @@ def bully(timeout):
                 try:
                     if app.leader == None:
                         raise
-                    requests.get(url, timeout=timeout)
+                    response = requests.get(url, timeout=timeout)
+                    if response.status_code == 400:
+                        raise
                 except:
                     # Leader is dead
                     print("Leader is dead")
@@ -140,8 +145,8 @@ def health_check():
     with app.inactive_lock:
         if not app.inactive:
             return "OK"
-        else:
-            Request.close()
+    return "", 400
+            
 
 @app.route("/new_leader/<leader>")
 def new_leader(leader):
@@ -158,7 +163,7 @@ def start_election(caller):
             threading.Thread(target=election, args=(TIMEOUT,)).start()
             return "OK"
         else:
-            Request.close()
+            return "", 400
 
 @socketio.on('event')
 def handle_message(event):
